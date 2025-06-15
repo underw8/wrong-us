@@ -50,7 +50,7 @@ console.log("Creating zip file...");
 const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../package.json"), "utf8")
 );
-const zipName = `url-redirector-text-replacer-${packageJson.version}.zip`;
+const zipName = `${packageJson.name}-${packageJson.version}.zip`;
 const zipPath = path.join(__dirname, "..", zipName);
 
 // Remove existing zip if it exists

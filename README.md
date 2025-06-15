@@ -1,135 +1,135 @@
-# URL Redirector & Text Replacer Chrome Extension
+# The Internet Imposter 🕵️
 
-A Chrome extension that redirects URLs and replaces text on webpages with a beautiful Material Design 3 interface.
+Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!
 
 ## Features
 
-✨ **Modern Material Design 3 UI** - Beautiful, responsive interface following Google's latest design guidelines  
-🔗 **URL Redirection** - Redirect any URL pattern using wildcards or regex  
-📝 **Text Replacement** - Replace text on any webpage in real-time  
-🌐 **UTF-8 Support** - Full Unicode support for international characters and emojis  
-⚡ **Real-time Updates** - Changes apply immediately without page refresh  
-🎯 **Pattern Matching** - Supports both simple wildcards (\*) and complex regex patterns
+✨ **Stealth Mode UI** - Beautiful Material Design 3 interface that looks totally innocent  
+🔗 **Link Hijacking** - Redirect any URL pattern using wildcards or regex like a pro  
+📝 **Text Infiltration** - Replace text on any webpage in real-time without anyone knowing  
+🌐 **Global Operations** - Full UTF-8 support for international ninja missions  
+⚡ **Instant Deployment** - Changes apply immediately without page refresh  
+🎯 **Pattern Mastery** - Supports both simple wildcards (\*) and complex regex patterns
 
 ## Installation
 
-1. **Build the extension:**
+1. **Prepare Your Arsenal:**
 
    ```bash
    yarn install
    yarn build
    ```
 
-2. **Load in Chrome:**
+2. **Deploy the Agent:**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (top right toggle)
    - Click "Load unpacked" and select the `dist` folder
-   - The extension icon will appear in your toolbar
+   - The ninja extension icon will appear in your toolbar
 
-## Usage
+## Mission Briefings
 
-### URL Redirection
+### 🎯 URL Hijacking Operations
 
-- Click the extension icon to open the popup
+- Click the extension icon to open your command center
 - In the "URL Redirects" section, click "Add URL Rule"
-- Enter a URL pattern in the first field:
-  - **Wildcard**: `*avatar-management*.atl-paas.net*`
-  - **Regex**: `^https://avatar-management.*/(48|128|256)$`
-- Enter the redirect URL in the second field
-- Rules are saved automatically and apply immediately
+- Enter your target pattern:
+  - **Stealth Mode**: `*avatar-management*.atl-paas.net*`
+  - **Ninja Regex**: `^https://avatar-management.*/(48|128|256)$`
+- Enter the redirect destination
+- Mission auto-saves and deploys immediately
 
-### Text Replacement
+### 📝 Text Infiltration Missions
 
 - In the "Text Replacements" section, click "Add Text Rule"
-- Enter the text to find and the replacement text
-- Text replacement works on all webpages in real-time
-- Supports special characters and Unicode: `🔗 ➡️ 📝 ✨`
+- Enter the target text and replacement
+- Text replacement works across all websites in real-time
+- Supports international characters and emojis: `🕵️ ➡️ 🥷 ✨`
 
-## Material Design Features
+## Stealth Technology
 
-The extension features a modern Material Design 3 interface with:
+The extension features cutting-edge ninja technology:
 
-- **Dynamic Color System** - Uses Material Design 3 color tokens
-- **Roboto Typography** - Google's signature font family
-- **Material Icons** - Consistent iconography throughout
-- **Elevated Surfaces** - Cards and containers with proper elevation
-- **Interactive States** - Hover and focus states for all interactive elements
-- **Responsive Layout** - Adapts to different screen sizes
-- **Accessibility** - Proper contrast ratios and keyboard navigation
+- **Invisible UI** - Material Design 3 color system that blends in perfectly
+- **Silent Typography** - Google's Roboto font for maximum stealth
+- **Coded Icons** - Material Icons that look completely innocent
+- **Shadow Surfaces** - Cards and containers with proper ninja elevation
+- **Ghost Interactions** - Hover and focus states that leave no trace
+- **Adaptive Camouflage** - Responsive layout for any screen size
+- **Accessibility Cloak** - Proper contrast ratios for undercover operations
 
-## UTF-8 Support
+## International Ninja Support
 
-The extension fully supports UTF-8 encoding:
+The extension operates globally with full UTF-8 encoding:
 
-- ✅ International characters (é, ñ, ü, etc.)
-- ✅ Emojis and symbols (🔗, ➡️, 📝, ✨)
-- ✅ Asian languages (中文, 日本語, 한국어)
-- ✅ Mathematical symbols (∑, ∆, π)
-- ✅ Special punctuation and diacritics
+- ✅ European missions (é, ñ, ü, etc.)
+- ✅ Emoji communications (🕵️, ➡️, 📝, ✨)
+- ✅ Asian operations (中文, 日本語, 한국어)
+- ✅ Mathematical codes (∑, ∆, π)
+- ✅ Special symbols and diacritics
 
 ## Development
 
-### Project Structure
+### Ninja Headquarters Structure
 
 ```
 src/
-├── background/     # Service worker for URL redirection
-├── content/        # Content script for text replacement
-├── popup/          # Extension popup UI
-├── types/          # Shared TypeScript interfaces
-└── assets/         # Icons and static files
+├── background/     # Command center for URL operations
+├── content/        # Field agents for text missions
+├── popup/          # Mission control interface
+├── types/          # Classified TypeScript intel
+└── assets/         # Disguise materials and icons
 ```
 
-### Build System
+### Ninja Tools
 
-- **TypeScript** - Type-safe development
-- **ESLint v9** - Code linting with flat config
-- **Material Design 3** - Modern UI components
-- **Chrome Manifest V3** - Latest extension API
+- **TypeScript** - Type-safe mission planning
+- **ESLint v9** - Code quality surveillance
+- **Material Design 3** - Perfect cover identity
+- **Chrome Manifest V3** - Latest stealth protocols
 
-### Commands
+### Command Operations
 
 ```bash
-yarn build          # Build the extension
-yarn lint           # Run ESLint
-yarn clean          # Clean build directory
+yarn build          # Compile ninja tools
+yarn lint           # Security sweep
+yarn clean          # Destroy evidence
 ```
 
-## Examples
+## Mission Examples
 
-### Jira Avatar Redirection
-
-```
-From: *avatar-management*.atl-paas.net*
-To: https://ca.slack-edge.com/T7Z35JWLQ-UR3LQQE0Y-e3a0fca501c8-512
-```
-
-### Text Replacement
+### Operation Avatar Swap
 
 ```
-From: "Hello World"
-To: "¡Hola Mundo! 🌍"
+Target: *avatar-management*.atl-paas.net*
+Redirect: https://ca.slack-edge.com/T7Z35JWLQ-UR3LQQE0Y-e3a0fca501c8-512
 ```
 
-## Technical Details
+### Operation Word Replacement
 
-- **Manifest Version**: 3 (latest Chrome extension standard)
-- **Permissions**: `declarativeNetRequest`, `storage`, `scripting`, `activeTab`
-- **Architecture**: Service worker + content scripts
-- **Storage**: Chrome sync storage for cross-device synchronization
-- **Pattern Matching**: Automatic detection of wildcard vs regex patterns
+```
+Target: "Hello World"
+Replace: "Greetings Fellow Ninja! 🥷"
+```
+
+## Technical Specifications
+
+- **Stealth Level**: Manifest V3 (maximum invisibility)
+- **Clearance**: `declarativeNetRequest`, `storage`, `scripting`, `activeTab`
+- **Architecture**: Service worker + field agents (content scripts)
+- **Data Storage**: Chrome sync storage for multi-device operations
+- **Pattern Recognition**: Automatic detection of wildcard vs regex patterns
 
 ## Troubleshooting
 
-1. **Extension not loading**: Ensure you selected the `dist` folder, not the root folder
-2. **Rules not working**: Check the browser console for any errors
-3. **UTF-8 issues**: Verify your system supports UTF-8 encoding
-4. **Pattern matching**: Test your regex patterns in a regex tester first
+1. **Agent not deploying**: Ensure you selected the `dist` folder, not the source
+2. **Mission failing**: Check browser console for error reports
+3. **Encoding issues**: Verify UTF-8 support in your system
+4. **Pattern problems**: Test regex patterns in a pattern analyzer first
 
 ## License
 
-MIT License - feel free to modify and distribute.
+MIT License - Share the ninja knowledge freely.
 
 ---
 
-Built with ❤️ using Material Design 3 and modern web technologies.
+Built with ❤️ by digital ninjas using Material Design 3 and modern stealth technologies. 🥷✨
