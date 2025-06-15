@@ -1,0 +1,11 @@
+{
+  "version": "2.250615.0",
+  "buildNumber": 4,
+  "displayVersion": "v2.250615.0 - Build 4",
+  "buildDate": "2025-06-15T08:14:41.053Z",
+  "buildType": "major",
+  "gitCommit": "local",
+  "environment": "development",
+  "extensionName": "The Internet Imposter",
+  "description": "Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!"
+}

@@ -1,13 +1,17 @@
 {
   "name": "the-internet-imposter",
-  "version": "1.0.0",
+  "version": "0.250615.14",
   "description": "Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",
-    "test": "echo 'Tests temporarily disabled - extension functionality verified manually'"
+    "test": "echo 'Tests temporarily disabled - extension functionality verified manually'",
+    "version:patch": "node scripts/version-bump.js patch",
+    "version:minor": "node scripts/version-bump.js minor",
+    "version:major": "node scripts/version-bump.js major",
+    "version": "node scripts/version-bump.js"
   },
   "keywords": [
     "chrome-extension",
