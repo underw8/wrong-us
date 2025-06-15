@@ -1,167 +1,345 @@
-// Simple test to see if script loads
-console.log("Popup script loaded!");
+import { UrlRule, TextRule } from "../types/index";
 
-interface RedirectRule {
+// Legacy interfaces for migration
+interface LegacyRedirectRule {
   sourceUrl: string;
   targetUrl: string;
 }
 
-interface TextRule {
+interface LegacyTextRule {
   sourceText: string;
   targetText: string;
 }
 
-// Load saved rules
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const result = await chrome.storage.sync.get(["rules", "textRules"]);
-    const urlRules = result.rules || [];
-    const textRules = result.textRules || [];
+class PopupManager {
+  private urlRulesContainer: HTMLElement;
+  private textRulesContainer: HTMLElement;
+  private addUrlRuleBtn: HTMLElement;
+  private addTextRuleBtn: HTMLElement;
 
-    // Initialize URL rules
-    urlRules.forEach((rule: RedirectRule) => addUrlRuleElement(rule));
+  constructor() {
+    this.urlRulesContainer = document.getElementById("urlRules")!;
+    this.textRulesContainer = document.getElementById("textRules")!;
+    this.addUrlRuleBtn = document.getElementById("addUrlRule")!;
+    this.addTextRuleBtn = document.getElementById("addTextRule")!;
 
-    // Initialize text rules
-    textRules.forEach((rule: TextRule) => addTextRuleElement(rule));
-  } catch (error) {
-    console.log("Error loading saved rules:", error);
-    // Continue with empty rules if storage fails
+    this.init();
   }
-});
 
-// URL Rules
-document.getElementById("addUrlRule")?.addEventListener("click", () => {
-  addUrlRuleElement();
-});
-
-function addUrlRuleElement(
-  rule: RedirectRule = { sourceUrl: "", targetUrl: "" }
-): void {
-  const container = document.getElementById("urlRules");
-  if (!container) return;
-
-  const div = document.createElement("div");
-  div.className = "rule";
-
-  const sourceInput = document.createElement("input");
-  sourceInput.placeholder =
-    "URL pattern: *avatar-management.*/(48|128|256)$ or ^https://example.com.*";
-  sourceInput.value = rule.sourceUrl;
-
-  const targetInput = document.createElement("input");
-  targetInput.placeholder =
-    "Redirect to URL (e.g., https://ca.slack-edge.com/...)";
-  targetInput.value = rule.targetUrl;
-
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "×";
-  deleteBtn.onclick = () => {
-    div.remove();
-    saveRules();
-  };
-
-  div.appendChild(sourceInput);
-  div.appendChild(targetInput);
-  div.appendChild(deleteBtn);
-  container.appendChild(div);
-
-  // Save on change
-  [sourceInput, targetInput].forEach((input) => {
-    input.addEventListener("change", saveRules);
-  });
-}
-
-// Text Rules
-document.getElementById("addTextRule")?.addEventListener("click", () => {
-  addTextRuleElement();
-});
-
-function addTextRuleElement(
-  rule: TextRule = { sourceText: "", targetText: "" }
-): void {
-  const container = document.getElementById("textRules");
-  if (!container) return;
-
-  const div = document.createElement("div");
-  div.className = "rule";
-
-  const sourceInput = document.createElement("input");
-  sourceInput.placeholder = "Text to replace";
-  sourceInput.value = rule.sourceText;
-
-  const targetInput = document.createElement("input");
-  targetInput.placeholder = "Replace with";
-  targetInput.value = rule.targetText;
-
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "×";
-  deleteBtn.onclick = () => {
-    div.remove();
-    saveRules();
-  };
-
-  div.appendChild(sourceInput);
-  div.appendChild(targetInput);
-  div.appendChild(deleteBtn);
-  container.appendChild(div);
-
-  // Save on change
-  [sourceInput, targetInput].forEach((input) => {
-    input.addEventListener("change", saveRules);
-  });
-}
-
-// Save rules to storage
-async function saveRules(): Promise<void> {
-  try {
-    const urlRulesContainer = document.getElementById("urlRules");
-    const textRulesContainer = document.getElementById("textRules");
-
-    if (!urlRulesContainer || !textRulesContainer) return;
-
-    const urlRules: RedirectRule[] = Array.from(urlRulesContainer.children)
-      .map((div) => ({
-        sourceUrl: (div.children[0] as HTMLInputElement).value,
-        targetUrl: (div.children[1] as HTMLInputElement).value,
-      }))
-      .filter((rule) => rule.sourceUrl && rule.targetUrl);
-
-    const textRules: TextRule[] = Array.from(textRulesContainer.children)
-      .map((div) => ({
-        sourceText: (div.children[0] as HTMLInputElement).value,
-        targetText: (div.children[1] as HTMLInputElement).value,
-      }))
-      .filter((rule) => rule.sourceText && rule.targetText);
-
-    // Save to storage
-    await chrome.storage.sync.set({ rules: urlRules, textRules });
-
-    // Notify background script with error handling
+  private async init(): Promise<void> {
     try {
-      await chrome.runtime.sendMessage({
-        type: "UPDATE_RULES",
-        rules: urlRules,
-      });
+      await this.migrateOldData();
+      await this.loadRules();
+      this.setupEventListeners();
     } catch (error) {
-      // Background script not ready, ignore
+      console.error("Failed to initialize popup:", error);
     }
+  }
 
-    // Notify content scripts with error handling
+  private async migrateOldData(): Promise<void> {
     try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (tabs[0]?.id) {
-        await chrome.tabs.sendMessage(tabs[0].id, {
-          type: "UPDATE_TEXT_RULES",
-          rules: textRules,
-        });
+      // Check for old data format
+      const oldData = await chrome.storage.sync.get(["rules", "textRules"]);
+      const newData = await chrome.storage.sync.get(["urlRules"]);
+
+      // Migrate URL rules if old format exists and new format doesn't
+      if (oldData.rules && !newData.urlRules) {
+        console.log("Migrating old URL rules...");
+        const oldUrlRules: LegacyRedirectRule[] = oldData.rules;
+        const newUrlRules: UrlRule[] = oldUrlRules.map((rule) => ({
+          from: rule.sourceUrl,
+          to: rule.targetUrl,
+        }));
+
+        await chrome.storage.sync.set({ urlRules: newUrlRules });
+        console.log(`Migrated ${newUrlRules.length} URL rules`);
+      }
+
+      // Migrate text rules if old format exists with different structure
+      if (
+        oldData.textRules &&
+        Array.isArray(oldData.textRules) &&
+        oldData.textRules.length > 0
+      ) {
+        const firstRule = oldData.textRules[0];
+        // Check if it's the old format with sourceText/targetText
+        if (
+          firstRule &&
+          "sourceText" in firstRule &&
+          "targetText" in firstRule
+        ) {
+          console.log("Migrating old text rules...");
+          const oldTextRules: LegacyTextRule[] = oldData.textRules;
+          const newTextRules: TextRule[] = oldTextRules.map((rule) => ({
+            from: rule.sourceText,
+            to: rule.targetText,
+          }));
+
+          await chrome.storage.sync.set({ textRules: newTextRules });
+          console.log(`Migrated ${newTextRules.length} text rules`);
+        }
       }
     } catch (error) {
-      // Content script not ready, ignore
+      console.error("Error during migration:", error);
     }
-  } catch (error) {
-    console.error("Error saving rules:", error);
+  }
+
+  private setupEventListeners(): void {
+    this.addUrlRuleBtn.addEventListener("click", () => this.addUrlRule());
+    this.addTextRuleBtn.addEventListener("click", () => this.addTextRule());
+  }
+
+  private async loadRules(): Promise<void> {
+    try {
+      const result = await chrome.storage.sync.get(["urlRules", "textRules"]);
+      const urlRules: UrlRule[] = result.urlRules || [];
+      const textRules: TextRule[] = result.textRules || [];
+
+      console.log("Loaded rules:", {
+        urlRules: urlRules.length,
+        textRules: textRules.length,
+      });
+
+      this.renderUrlRules(urlRules);
+      this.renderTextRules(textRules);
+    } catch (error) {
+      console.error("Failed to load rules:", error);
+    }
+  }
+
+  private renderUrlRules(rules: UrlRule[]): void {
+    if (rules.length === 0) {
+      this.urlRulesContainer.innerHTML = this.createEmptyState(
+        "No URL redirect rules yet",
+        "link_off"
+      );
+      return;
+    }
+
+    this.urlRulesContainer.innerHTML = rules
+      .map((rule, index) => this.createRuleElement(rule, index, "url"))
+      .join("");
+
+    this.attachRuleEventListeners("url");
+  }
+
+  private renderTextRules(rules: TextRule[]): void {
+    if (rules.length === 0) {
+      this.textRulesContainer.innerHTML = this.createEmptyState(
+        "No text replacement rules yet",
+        "text_fields"
+      );
+      return;
+    }
+
+    this.textRulesContainer.innerHTML = rules
+      .map((rule, index) => this.createRuleElement(rule, index, "text"))
+      .join("");
+
+    this.attachRuleEventListeners("text");
+  }
+
+  private createEmptyState(message: string, icon: string): string {
+    return `
+      <div class="empty-state">
+        <span class="material-icons">${icon}</span>
+        ${message}
+      </div>
+    `;
+  }
+
+  private createRuleElement(
+    rule: UrlRule | TextRule,
+    index: number,
+    type: "url" | "text"
+  ): string {
+    const fromPlaceholder =
+      type === "url"
+        ? "Enter URL pattern (e.g., *example.com* or regex)"
+        : "Text to find";
+    const toPlaceholder = type === "url" ? "Redirect to URL" : "Replace with";
+
+    return `
+      <div class="rule" data-index="${index}" data-type="${type}">
+        <div class="input-field">
+          <input 
+            type="text" 
+            placeholder="${fromPlaceholder}" 
+            value="${this.escapeHtml(rule.from)}"
+            data-field="from"
+          >
+        </div>
+        <div class="input-field">
+          <input 
+            type="text" 
+            placeholder="${toPlaceholder}" 
+            value="${this.escapeHtml(rule.to)}"
+            data-field="to"
+          >
+        </div>
+        <button class="delete-btn" data-action="delete">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+    `;
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  private attachRuleEventListeners(type: "url" | "text"): void {
+    const container =
+      type === "url" ? this.urlRulesContainer : this.textRulesContainer;
+
+    container.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.tagName === "INPUT") {
+        this.handleRuleChange(target, type);
+      }
+    });
+
+    container.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const deleteBtn = target.closest('[data-action="delete"]') as HTMLElement;
+
+      if (deleteBtn) {
+        const ruleElement = deleteBtn.closest(".rule") as HTMLElement;
+        const index = parseInt(ruleElement.dataset.index!);
+        this.deleteRule(index, type);
+      }
+    });
+  }
+
+  private async handleRuleChange(
+    input: HTMLInputElement,
+    type: "url" | "text"
+  ): Promise<void> {
+    try {
+      const ruleElement = input.closest(".rule") as HTMLElement;
+      const index = parseInt(ruleElement.dataset.index!);
+      const field = input.dataset.field as "from" | "to";
+      const value = input.value;
+
+      const storageKey = type === "url" ? "urlRules" : "textRules";
+      const result = await chrome.storage.sync.get([storageKey]);
+      const rules = result[storageKey] || [];
+
+      if (rules[index]) {
+        rules[index][field] = value;
+        await chrome.storage.sync.set({ [storageKey]: rules });
+
+        // Notify background script of changes
+        await this.notifyBackgroundScript(type);
+      }
+    } catch (error) {
+      console.error("Failed to update rule:", error);
+    }
+  }
+
+  private async deleteRule(index: number, type: "url" | "text"): Promise<void> {
+    try {
+      const storageKey = type === "url" ? "urlRules" : "textRules";
+      const result = await chrome.storage.sync.get([storageKey]);
+      const rules = result[storageKey] || [];
+
+      rules.splice(index, 1);
+      await chrome.storage.sync.set({ [storageKey]: rules });
+
+      // Re-render the rules
+      if (type === "url") {
+        this.renderUrlRules(rules);
+      } else {
+        this.renderTextRules(rules);
+      }
+
+      // Notify background script of changes
+      await this.notifyBackgroundScript(type);
+    } catch (error) {
+      console.error("Failed to delete rule:", error);
+    }
+  }
+
+  private async addUrlRule(): Promise<void> {
+    try {
+      const result = await chrome.storage.sync.get(["urlRules"]);
+      const urlRules: UrlRule[] = result.urlRules || [];
+
+      urlRules.push({ from: "", to: "" });
+      await chrome.storage.sync.set({ urlRules });
+
+      this.renderUrlRules(urlRules);
+      await this.notifyBackgroundScript("url");
+    } catch (error) {
+      console.error("Failed to add URL rule:", error);
+    }
+  }
+
+  private async addTextRule(): Promise<void> {
+    try {
+      const result = await chrome.storage.sync.get(["textRules"]);
+      const textRules: TextRule[] = result.textRules || [];
+
+      textRules.push({ from: "", to: "" });
+      await chrome.storage.sync.set({ textRules });
+
+      this.renderTextRules(textRules);
+      await this.notifyBackgroundScript("text");
+    } catch (error) {
+      console.error("Failed to add text rule:", error);
+    }
+  }
+
+  private async notifyBackgroundScript(type: "url" | "text"): Promise<void> {
+    try {
+      if (type === "url") {
+        await chrome.runtime.sendMessage({ action: "updateUrlRules" });
+      } else {
+        // Notify all tabs about text rule changes
+        const tabs = await chrome.tabs.query({});
+        for (const tab of tabs) {
+          if (tab.id) {
+            try {
+              await chrome.tabs.sendMessage(tab.id, {
+                action: "updateTextRules",
+              });
+            } catch {
+              // Tab might not have content script, ignore
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to notify background script:", error);
+    }
   }
 }
+
+// Initialize the popup when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    new PopupManager();
+  } catch (error) {
+    console.error("Error creating PopupManager:", error);
+  }
+});
+
+// Handle any encoding issues by ensuring proper UTF-8 handling
+document.addEventListener("DOMContentLoaded", () => {
+  // Ensure proper UTF-8 encoding for all text content
+  const metaCharset = document.querySelector(
+    "meta[charset]"
+  ) as HTMLMetaElement;
+  if (
+    !metaCharset ||
+    metaCharset.getAttribute("charset")?.toLowerCase() !== "utf-8"
+  ) {
+    console.warn("UTF-8 charset not properly set");
+  }
+
+  // Test UTF-8 support
+  const testString = "🔗 ➡️ 📝 ✨";
+  console.log("UTF-8 test string:", testString);
+});

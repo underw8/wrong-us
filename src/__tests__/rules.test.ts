@@ -1,54 +1,81 @@
 import { describe, it, expect } from "@jest/globals";
-
-interface RedirectRule {
-  sourceUrl: string;
-  targetUrl: string;
-}
-
-interface TextRule {
-  sourceText: string;
-  targetText: string;
-}
+import { UrlRule, TextRule } from "../types/index.js";
 
 describe("Rules", () => {
-  describe("Redirect Rules", () => {
-    it("should validate redirect rule structure", () => {
-      const rule: RedirectRule = {
-        sourceUrl: "https://example.com",
-        targetUrl: "https://redirected.com",
+  describe("URL Redirect Rules", () => {
+    it("should validate URL rule structure", () => {
+      const rule: UrlRule = {
+        from: "https://example.com",
+        to: "https://redirected.com",
       };
 
-      expect(rule).toHaveProperty("sourceUrl");
-      expect(rule).toHaveProperty("targetUrl");
-      expect(typeof rule.sourceUrl).toBe("string");
-      expect(typeof rule.targetUrl).toBe("string");
+      expect(rule).toHaveProperty("from");
+      expect(rule).toHaveProperty("to");
+      expect(typeof rule.from).toBe("string");
+      expect(typeof rule.to).toBe("string");
+    });
+
+    it("should handle wildcard patterns", () => {
+      const rule: UrlRule = {
+        from: "*example.com*",
+        to: "https://redirected.com",
+      };
+
+      expect(rule.from).toContain("*");
+      expect(rule.to).toBe("https://redirected.com");
+    });
+
+    it("should handle regex patterns", () => {
+      const rule: UrlRule = {
+        from: "^https://example\\.com.*",
+        to: "https://redirected.com",
+      };
+
+      expect(rule.from).toMatch(/[\[\](){}.*+?^$|\\]/);
+      expect(rule.to).toBe("https://redirected.com");
     });
   });
 
   describe("Text Rules", () => {
     it("should validate text rule structure", () => {
       const rule: TextRule = {
-        sourceText: "Hello",
-        targetText: "Hi",
+        from: "Hello",
+        to: "Hi",
       };
 
-      expect(rule).toHaveProperty("sourceText");
-      expect(rule).toHaveProperty("targetText");
-      expect(typeof rule.sourceText).toBe("string");
-      expect(typeof rule.targetText).toBe("string");
+      expect(rule).toHaveProperty("from");
+      expect(rule).toHaveProperty("to");
+      expect(typeof rule.from).toBe("string");
+      expect(typeof rule.to).toBe("string");
     });
 
     it("should replace text correctly", () => {
       const rule: TextRule = {
-        sourceText: "Hello",
-        targetText: "Hi",
+        from: "Hello",
+        to: "Hi",
       };
 
       const text = "Hello World";
       const expected = "Hi World";
       const result = text.replace(
-        new RegExp(rule.sourceText, "g"),
-        rule.targetText
+        new RegExp(rule.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+        rule.to
+      );
+
+      expect(result).toBe(expected);
+    });
+
+    it("should handle special characters in text replacement", () => {
+      const rule: TextRule = {
+        from: "Hello (World)",
+        to: "Hi [Universe]",
+      };
+
+      const text = "Hello (World) is great";
+      const expected = "Hi [Universe] is great";
+      const result = text.replace(
+        new RegExp(rule.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+        rule.to
       );
 
       expect(result).toBe(expected);

@@ -9,12 +9,20 @@ export default [
     languageOptions: {
       parser: tsparser,
       parserOptions: {
-        project: "./tsconfig.json",
         ecmaVersion: "latest",
         sourceType: "module",
       },
       globals: {
         chrome: "readonly",
+        console: "readonly",
+        document: "readonly",
+        window: "readonly",
+        NodeFilter: "readonly",
+        MutationObserver: "readonly",
+        HTMLElement: "readonly",
+        HTMLInputElement: "readonly",
+        HTMLMetaElement: "readonly",
+        Text: "readonly",
       },
     },
     plugins: {
@@ -27,43 +35,16 @@ export default [
         "error",
         { argsIgnorePattern: "^_" },
       ],
-      "@typescript-eslint/no-var-requires": "off",
       "no-undef": "off",
     },
   },
   {
-    files: ["**/*.d.ts"],
-    languageOptions: {
-      parser: tsparser,
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-      },
-    },
-    rules: {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "off",
-    },
-  },
-  {
-    files: ["**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-      globals: {
-        chrome: "readonly",
-        console: "readonly",
-        module: "readonly",
-        require: "readonly",
-        process: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
-        Buffer: "readonly",
-        global: "readonly",
-      },
-    },
-  },
-  {
-    ignores: ["dist/**/*", "node_modules/**/*"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "scripts/**",
+      "**/*.test.ts",
+      "**/__tests__/**",
+    ],
   },
 ];

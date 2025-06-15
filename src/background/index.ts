@@ -1,22 +1,52 @@
-interface RedirectRule {
+import { UrlRule } from "../types/index";
+
+// Legacy interface for migration
+interface LegacyRedirectRule {
   sourceUrl: string;
   targetUrl: string;
 }
 
 // Store for URL redirect rules
-let redirectRules: RedirectRule[] = [];
+let redirectRules: UrlRule[] = [];
 
 console.log("Background script loaded");
+
+// Migration function
+async function migrateOldData(): Promise<void> {
+  try {
+    const oldData = await chrome.storage.sync.get(["rules"]);
+    const newData = await chrome.storage.sync.get(["urlRules"]);
+
+    // Migrate URL rules if old format exists and new format doesn't
+    if (oldData.rules && !newData.urlRules) {
+      console.log("Background: Migrating old URL rules...");
+      const oldUrlRules: LegacyRedirectRule[] = oldData.rules;
+      const newUrlRules: UrlRule[] = oldUrlRules.map((rule) => ({
+        from: rule.sourceUrl,
+        to: rule.targetUrl,
+      }));
+
+      await chrome.storage.sync.set({ urlRules: newUrlRules });
+      console.log(`Background: Migrated ${newUrlRules.length} URL rules`);
+      return;
+    }
+  } catch (error) {
+    console.error("Background: Error during migration:", error);
+  }
+}
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(async () => {
   console.log("Extension installed/updated");
   try {
-    // Load saved rules from storage
-    const result = await chrome.storage.sync.get(["rules"]);
+    // First migrate old data
+    await migrateOldData();
+
+    // Then load rules (new format)
+    const result = await chrome.storage.sync.get(["urlRules"]);
     console.log("Storage result:", result);
-    if (result.rules) {
-      redirectRules = result.rules;
+    if (result.urlRules) {
+      redirectRules = result.urlRules;
       console.log("Loaded redirect rules:", redirectRules);
       await updateRedirectRules();
     } else {
@@ -29,12 +59,19 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Listen for rule updates from popup
 chrome.runtime.onMessage.addListener(
-  (message: { type: string; rules: RedirectRule[] }, _sender, sendResponse) => {
+  (message: { action: string; rules?: UrlRule[] }, _sender, sendResponse) => {
     console.log("Received message:", message);
-    if (message.type === "UPDATE_RULES") {
-      redirectRules = message.rules;
-      console.log("Updated redirect rules:", redirectRules);
-      updateRedirectRules()
+    if (message.action === "updateUrlRules") {
+      // Reload rules from storage
+      chrome.storage.sync
+        .get(["urlRules"])
+        .then((result) => {
+          if (result.urlRules) {
+            redirectRules = result.urlRules;
+            console.log("Updated redirect rules:", redirectRules);
+            return updateRedirectRules();
+          }
+        })
         .then(() => {
           console.log("Rules updated successfully");
           sendResponse({ success: true });
@@ -51,7 +88,7 @@ chrome.runtime.onMessage.addListener(
 // Helper function to detect if a pattern is regex
 function isRegexPattern(pattern: string): boolean {
   // Check if pattern contains regex special characters or starts with ^
-  return /[\[\](){}.*+?^$|\\]/.test(pattern) || pattern.startsWith("^");
+  return /[[\](){}.*+?^$|\\]/.test(pattern) || pattern.startsWith("^");
 }
 
 // Update declarative net request rules
@@ -72,17 +109,18 @@ async function updateRedirectRules(): Promise<void> {
       });
     }
 
-    // Add new rules
-    if (redirectRules.length > 0) {
-      const rules = redirectRules.map((rule, index) => {
-        const isRegex = isRegexPattern(rule.sourceUrl);
+    // Add new rules - filter out empty rules
+    const validRules = redirectRules.filter((rule) => rule.from && rule.to);
+    if (validRules.length > 0) {
+      const rules = validRules.map((rule, index) => {
+        const isRegex = isRegexPattern(rule.from);
         console.log(
-          `Rule ${index + 1}: ${rule.sourceUrl} - Using ${
+          `Rule ${index + 1}: ${rule.from} - Using ${
             isRegex ? "regex" : "url"
           } filter`
         );
 
-        const condition: any = {
+        const condition: chrome.declarativeNetRequest.RuleCondition = {
           resourceTypes: [
             chrome.declarativeNetRequest.ResourceType.IMAGE,
             chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
@@ -92,9 +130,9 @@ async function updateRedirectRules(): Promise<void> {
         };
 
         if (isRegex) {
-          condition.regexFilter = rule.sourceUrl;
+          condition.regexFilter = rule.from;
         } else {
-          condition.urlFilter = rule.sourceUrl;
+          condition.urlFilter = rule.from;
         }
 
         return {
@@ -102,7 +140,7 @@ async function updateRedirectRules(): Promise<void> {
           priority: 1,
           action: {
             type: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-            redirect: { url: rule.targetUrl },
+            redirect: { url: rule.to },
           },
           condition,
         };
@@ -117,7 +155,7 @@ async function updateRedirectRules(): Promise<void> {
       const newRules = await chrome.declarativeNetRequest.getDynamicRules();
       console.log("Rules after update:", newRules);
     } else {
-      console.log("No rules to add");
+      console.log("No valid rules to add");
     }
   } catch (error) {
     console.error("Error updating declarative net request rules:", error);

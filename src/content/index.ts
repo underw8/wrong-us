@@ -1,6 +1,6 @@
 interface TextRule {
-  sourceText: string;
-  targetText: string;
+  from: string;
+  to: string;
 }
 
 // Store for text replacement rules
@@ -25,11 +25,22 @@ try {
 
 // Listen for rule updates
 chrome.runtime.onMessage.addListener(
-  (message: { type: string; rules: TextRule[] }, _sender, sendResponse) => {
-    if (message.type === "UPDATE_TEXT_RULES") {
-      textRules = message.rules;
-      applyTextReplacements();
-      sendResponse({ success: true });
+  (message: { action: string; rules?: TextRule[] }, _sender, sendResponse) => {
+    if (message.action === "updateTextRules") {
+      // Reload rules from storage
+      chrome.storage.sync
+        .get(["textRules"])
+        .then((result) => {
+          if (result.textRules) {
+            textRules = result.textRules;
+            applyTextReplacements();
+          }
+          sendResponse({ success: true });
+        })
+        .catch((error) => {
+          console.error("Error reloading text rules:", error);
+          sendResponse({ success: false, error: error.message });
+        });
     }
     return true; // Keep message channel open
   }
@@ -54,10 +65,10 @@ function applyTextReplacements(): void {
       let modified = false;
 
       textRules.forEach((rule) => {
-        if (text && text.includes(rule.sourceText)) {
+        if (text && rule.from && rule.to && text.includes(rule.from)) {
           text = text.replace(
-            new RegExp(rule.sourceText, "g"),
-            rule.targetText
+            new RegExp(rule.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+            rule.to
           );
           modified = true;
         }
