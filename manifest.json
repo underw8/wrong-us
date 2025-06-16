@@ -1,18 +1,29 @@
 {
   "manifest_version": 3,
   "name": "Wrong Us - The Internet Imposter",
-  "version": "0.250615.14",
+  "version": "0.250616.0",
   "description": "Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!",
-  "permissions": ["declarativeNetRequest", "storage", "scripting", "activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "declarativeNetRequest",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background/index.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/index.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/index.js"
+      ]
     }
   ],
   "action": {
