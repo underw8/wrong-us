@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link
@@ -16,20 +16,20 @@
     />
     <style>
       :root {
-        --md-sys-color-primary: #6750a4;
+        --md-sys-color-primary: #00695c;
         --md-sys-color-on-primary: #ffffff;
-        --md-sys-color-primary-container: #eaddff;
-        --md-sys-color-on-primary-container: #21005d;
-        --md-sys-color-secondary: #625b71;
+        --md-sys-color-primary-container: #9ff2e6;
+        --md-sys-color-on-primary-container: #002019;
+        --md-sys-color-secondary: #4a635f;
         --md-sys-color-on-secondary: #ffffff;
-        --md-sys-color-secondary-container: #e8def8;
-        --md-sys-color-on-secondary-container: #1d192b;
-        --md-sys-color-surface: #fffbfe;
-        --md-sys-color-on-surface: #1c1b1f;
-        --md-sys-color-surface-variant: #e7e0ec;
-        --md-sys-color-on-surface-variant: #49454f;
-        --md-sys-color-outline: #79747e;
-        --md-sys-color-outline-variant: #cab6cf;
+        --md-sys-color-secondary-container: #ccebe3;
+        --md-sys-color-on-secondary-container: #05201c;
+        --md-sys-color-surface: #f4fffe;
+        --md-sys-color-on-surface: #161d1c;
+        --md-sys-color-surface-variant: #dae5e1;
+        --md-sys-color-on-surface-variant: #3f4946;
+        --md-sys-color-outline: #6f7976;
+        --md-sys-color-outline-variant: #bec9c5;
         --md-sys-color-error: #ba1a1a;
         --md-sys-color-on-error: #ffffff;
         --md-sys-color-error-container: #ffdad6;
@@ -54,18 +54,43 @@
 
       .header {
         margin-bottom: 32px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 8px 16px;
+        align-items: start;
+      }
+
+      .header-content {
+        grid-column: 1;
+        grid-row: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }
 
       .header h1 {
-        font-size: 22px;
-        font-weight: 600;
+        font-size: 24px;
+        font-weight: 700;
         color: var(--md-sys-color-on-surface);
-        margin-bottom: 8px;
+        margin: 0;
+        letter-spacing: -0.02em;
       }
 
       .header .subtitle {
         font-size: 14px;
         color: var(--md-sys-color-on-surface-variant);
+        margin: 0;
+      }
+
+      .header .logo {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        width: 80px;
+        height: 80px;
+        opacity: 0.9;
+        align-self: center;
+        justify-self: end;
       }
 
       .section {
@@ -85,10 +110,11 @@
       }
 
       .section h2 {
-        font-size: 16px;
-        font-weight: 500;
+        font-size: 18px;
+        font-weight: 600;
         color: var(--md-sys-color-on-surface);
         margin: 0;
+        letter-spacing: -0.01em;
       }
 
       .help {
@@ -202,7 +228,7 @@
       .add-btn:hover {
         background-color: var(--md-sys-color-primary);
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(103, 80, 164, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 105, 92, 0.3);
       }
 
       .add-btn .material-icons {
@@ -245,10 +271,17 @@
   </head>
   <body>
     <div class="header">
-      <h1>The Internet Imposter 🕵️</h1>
-      <div class="subtitle">
-        Sneakily redirect links and replace text like a digital ninja
+      <div class="header-content">
+        <h1>The Internet Imposter</h1>
+        <div class="subtitle">
+          Sneakily redirect links and replace text like a digital ninja
+        </div>
       </div>
+      <img
+        src="../assets/icons/icon128.png"
+        alt="Internet Imposter"
+        class="logo"
+      />
     </div>
 
     <div class="section">

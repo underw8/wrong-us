@@ -97,7 +97,7 @@ fs.writeFileSync(manifestPath, JSON.stringify(manifestJson, null, 2) + "\n");
 // Update build number file
 fs.writeFileSync(buildNumberPath, JSON.stringify(buildData, null, 2));
 
-console.log(`🕵️ The Internet Imposter v${newVersion}`);
+console.log(`🕵️ Wrong Us - The Internet Imposter v${newVersion}`);
 console.log(`🔢 Build: ${buildData.buildNumber}`);
 console.log(`📦 Build type: ${bumpType}`);
 

@@ -1,6 +1,10 @@
-# The Internet Imposter 🕵️
-
-Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!
+<div style="position: relative; padding-right: 160px; min-height: 120px;">
+  <img src="src/assets/icons/icon128.png" alt="Internet Imposter" width="128" height="128" style="position: absolute; top: 0; right: 25%; opacity: 0.9;">
+  
+  # Wrong Us - The Internet Imposter
+  
+  Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!
+</div>
 
 ## Features
 
@@ -43,7 +47,7 @@ Sneakily redirect links and replace text like a digital ninja. Your browser, you
 - In the "Text Replacements" section, click "Add Text Rule"
 - Enter the target text and replacement
 - Text replacement works across all websites in real-time
-- Supports international characters and emojis: `🕵️ ➡️ 🥷 ✨`
+- Supports international characters and emojis: `<img src="src/assets/icons/icon16.png" alt="icon" width="16" height="16" style="vertical-align: middle;"> ➡️ 🥷 ✨`
 
 ## Stealth Technology
 
@@ -62,7 +66,7 @@ The extension features cutting-edge ninja technology:
 The extension operates globally with full UTF-8 encoding:
 
 - ✅ European missions (é, ñ, ü, etc.)
-- ✅ Emoji communications (🕵️, ➡️, 📝, ✨)
+- ✅ Emoji communications (<img src="src/assets/icons/icon16.png" alt="icon" width="16" height="16" style="vertical-align: middle;">, ➡️, 📝, ✨)
 - ✅ Asian operations (中文, 日本語, 한국어)
 - ✅ Mathematical codes (∑, ∆, π)
 - ✅ Special symbols and diacritics
