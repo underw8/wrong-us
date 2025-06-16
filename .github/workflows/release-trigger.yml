@@ -1,0 +1,87 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: "Release notes (optional)"
+        required: false
+        type: string
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Run linter
+        run: yarn lint
+
+      - name: Bump version and build
+        run: yarn build:${{ github.event.inputs.version_type }}
+
+      - name: Get new version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit version bump
+        run: |
+          git add package.json src/manifest.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.VERSION }}"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ steps.version.outputs.TAG }}
+          git push origin main
+          git push origin ${{ steps.version.outputs.TAG }}
+
+      - name: Create release notes
+        run: |
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo "${{ github.event.inputs.release_notes }}" > release-notes.txt
+          else
+            echo "Release ${{ steps.version.outputs.VERSION }}" > release-notes.txt
+            echo "" >> release-notes.txt
+            echo "### Changes" >> release-notes.txt
+            echo "- Version bump to ${{ steps.version.outputs.VERSION }}" >> release-notes.txt
+          fi
+
+      - name: Wait for release workflow
+        run: |
+          echo "✅ Version bumped to ${{ steps.version.outputs.VERSION }}"
+          echo "✅ Tag ${{ steps.version.outputs.TAG }} created and pushed"
+          echo "✅ Release workflow will automatically create GitHub release"
+          echo ""
+          echo "🚀 Check the Actions tab for the Release workflow progress"

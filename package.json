@@ -6,13 +6,18 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
+    "build:dev": "node scripts/build.js",
+    "build:release": "node scripts/version-bump.js patch && node scripts/build.js",
+    "build:minor": "node scripts/version-bump.js minor && node scripts/build.js",
+    "build:major": "node scripts/version-bump.js major && node scripts/build.js",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts",
     "test": "echo 'Tests temporarily disabled - extension functionality verified manually'",
     "version:patch": "node scripts/version-bump.js patch",
     "version:minor": "node scripts/version-bump.js minor",
     "version:major": "node scripts/version-bump.js major",
-    "version": "node scripts/version-bump.js"
+    "version": "node scripts/version-bump.js",
+    "release": "yarn lint && yarn build:release"
   },
   "keywords": [
     "chrome-extension",

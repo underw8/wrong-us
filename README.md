@@ -1,7 +1,7 @@
-<div style="position: relative; padding-right: 160px; min-height: 120px;">
-  <img src="src/assets/icons/icon128.png" alt="Internet Imposter" width="128" height="128" style="position: absolute; top: 0; right: 25%; opacity: 0.9;">
+<div style="text-align: center; margin-bottom: 2rem;">
+  <img src="src/assets/icons/icon128.png" alt="Internet Imposter" width="128" height="128" style="margin-bottom: 1rem; opacity: 0.9;">
   
-  # Wrong Us - The Internet Imposter
+  # The Internet Imposter
   
   Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!
 </div>
@@ -105,7 +105,7 @@ yarn clean          # Destroy evidence
 
 ```
 Target: *avatar-management*.atl-paas.net*
-Redirect: https://ca.slack-edge.com/T7Z35JWLQ-UR3LQQE0Y-e3a0fca501c8-512
+Redirect: https://public.caidu.me/the-impostor.webp
 ```
 
 ### Operation Word Replacement
@@ -132,8 +132,33 @@ Replace: "Greetings Fellow Ninja! 🥷"
 
 ## License
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 MIT License - Share the ninja knowledge freely.
+
+See the [LICENSE](LICENSE) file for details.
+
+## AI Generation Disclaimer
+
+🤖 **This project was generated with AI assistance using Cursor and Claude.**
+
+### Development Process
+
+- **Code Generation**: 100% AI-generated using Cursor + Claude Sonnet
+- **Human Oversight**: Reviewed, tested, and validated by human developer
+- **Functionality**: All features have been manually verified to work as intended
+
+### Important Notes
+
+- This code is provided "as-is" with thorough testing but acknowledge AI generation
+- Users should review and understand the code before use in production
+- We encourage community review and contributions to improve the codebase
+- No warranties are provided beyond standard MIT license terms
+
+### For Contributors
+
+If you'd like to contribute human-authored improvements or review AI-generated sections, pull requests are welcome! This helps strengthen the codebase with human insight and expertise.
 
 ---
 
-Built with ❤️ by digital ninjas using Material Design 3 and modern stealth technologies. 🥷✨
+Built with ❤️ by digital ninjas using [Cursor](https://cursor.sh/) and [Material Design 3](https://m3.material.io/) and modern stealth technologies. 🥷✨
