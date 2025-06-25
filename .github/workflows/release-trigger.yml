@@ -58,7 +58,7 @@ jobs:
 
       - name: Commit version bump
         run: |
-          git add package.json src/manifest.json
+          git add package.json manifest.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.VERSION }}"
 
       - name: Create and push tag
