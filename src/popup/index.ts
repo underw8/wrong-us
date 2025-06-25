@@ -16,12 +16,15 @@ class PopupManager {
   private textRulesContainer: HTMLElement;
   private addUrlRuleBtn: HTMLElement;
   private addTextRuleBtn: HTMLElement;
+  private globalToggle: HTMLInputElement;
+  private globalEnabled: boolean = true;
 
   constructor() {
     this.urlRulesContainer = document.getElementById("urlRules")!;
     this.textRulesContainer = document.getElementById("textRules")!;
     this.addUrlRuleBtn = document.getElementById("addUrlRule")!;
     this.addTextRuleBtn = document.getElementById("addTextRule")!;
+    this.globalToggle = document.getElementById("globalToggle") as HTMLInputElement;
 
     this.init();
   }
@@ -29,6 +32,7 @@ class PopupManager {
   private async init(): Promise<void> {
     try {
       await this.migrateOldData();
+      await this.loadGlobalState();
       await this.loadRules();
       this.setupEventListeners();
     } catch (error) {
@@ -84,9 +88,59 @@ class PopupManager {
     }
   }
 
+  private async loadGlobalState(): Promise<void> {
+    try {
+      const result = await chrome.storage.sync.get(["enabled"]);
+      this.globalEnabled = result.enabled !== undefined ? result.enabled : true;
+      this.globalToggle.checked = this.globalEnabled;
+      this.updateUIState();
+    } catch (error) {
+      console.error("Failed to load global state:", error);
+    }
+  }
+
+  private async handleGlobalToggle(): Promise<void> {
+    try {
+      this.globalEnabled = this.globalToggle.checked;
+      await chrome.storage.sync.set({ enabled: this.globalEnabled });
+      this.updateUIState();
+      
+      // Notify background script
+      await chrome.runtime.sendMessage({ action: "toggleGlobal" });
+      
+      // Notify all content scripts
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        if (tab.id) {
+          try {
+            await chrome.tabs.sendMessage(tab.id, {
+              action: "updateTextRules",
+            });
+          } catch {
+            // Tab might not have content script, ignore
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle global state:", error);
+    }
+  }
+
+  private updateUIState(): void {
+    const sections = document.querySelectorAll('.section');
+    sections.forEach(section => {
+      if (this.globalEnabled) {
+        section.classList.remove('disabled');
+      } else {
+        section.classList.add('disabled');
+      }
+    });
+  }
+
   private setupEventListeners(): void {
     this.addUrlRuleBtn.addEventListener("click", () => this.addUrlRule());
     this.addTextRuleBtn.addEventListener("click", () => this.addTextRule());
+    this.globalToggle.addEventListener("change", () => this.handleGlobalToggle());
   }
 
   private async loadRules(): Promise<void> {

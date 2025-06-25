@@ -6,8 +6,9 @@ interface LegacyRedirectRule {
   targetUrl: string;
 }
 
-// Store for URL redirect rules
+// Store for URL redirect rules and global state
 let redirectRules: UrlRule[] = [];
+let globalEnabled = true;
 
 console.log("Background script loaded");
 
@@ -42,12 +43,22 @@ chrome.runtime.onInstalled.addListener(async () => {
     // First migrate old data
     await migrateOldData();
 
-    // Then load rules (new format)
-    const result = await chrome.storage.sync.get(["urlRules"]);
+    // Then load rules and global state (new format)
+    const result = await chrome.storage.sync.get(["urlRules", "enabled"]);
     console.log("Storage result:", result);
+    
+    // Set default enabled state if not present
+    if (result.enabled === undefined) {
+      globalEnabled = true;
+      await chrome.storage.sync.set({ enabled: true });
+    } else {
+      globalEnabled = result.enabled;
+    }
+    
     if (result.urlRules) {
       redirectRules = result.urlRules;
       console.log("Loaded redirect rules:", redirectRules);
+      console.log("Global enabled state:", globalEnabled);
       await updateRedirectRules();
     } else {
       console.log("No saved rules found");
@@ -59,18 +70,22 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Listen for rule updates from popup
 chrome.runtime.onMessage.addListener(
-  (message: { action: string; rules?: UrlRule[] }, _sender, sendResponse) => {
+  (message: { action: string; rules?: UrlRule[]; enabled?: boolean }, _sender, sendResponse) => {
     console.log("Received message:", message);
     if (message.action === "updateUrlRules") {
       // Reload rules from storage
       chrome.storage.sync
-        .get(["urlRules"])
+        .get(["urlRules", "enabled"])
         .then((result) => {
           if (result.urlRules) {
             redirectRules = result.urlRules;
             console.log("Updated redirect rules:", redirectRules);
-            return updateRedirectRules();
           }
+          if (result.enabled !== undefined) {
+            globalEnabled = result.enabled;
+            console.log("Updated global enabled state:", globalEnabled);
+          }
+          return updateRedirectRules();
         })
         .then(() => {
           console.log("Rules updated successfully");
@@ -78,6 +93,29 @@ chrome.runtime.onMessage.addListener(
         })
         .catch((error) => {
           console.error("Error updating rules:", error);
+          sendResponse({ success: false, error: error.message });
+        });
+      return true; // Keep message channel open for async response
+    } else if (message.action === "toggleGlobal") {
+      // Handle global toggle
+      chrome.storage.sync
+        .get(["enabled", "urlRules"])
+        .then((result) => {
+          globalEnabled = result.enabled !== undefined ? result.enabled : true;
+          // Also reload the URL rules
+          if (result.urlRules) {
+            redirectRules = result.urlRules;
+            console.log("Reloaded redirect rules:", redirectRules.length, "rules");
+          }
+          console.log("Updated global enabled state:", globalEnabled);
+          return updateRedirectRules();
+        })
+        .then(() => {
+          console.log("Global state updated successfully");
+          sendResponse({ success: true, enabled: globalEnabled });
+        })
+        .catch((error) => {
+          console.error("Error updating global state:", error);
           sendResponse({ success: false, error: error.message });
         });
       return true; // Keep message channel open for async response
@@ -95,6 +133,7 @@ function isRegexPattern(pattern: string): boolean {
 async function updateRedirectRules(): Promise<void> {
   try {
     console.log("Starting to update redirect rules...");
+    console.log("Global enabled state:", globalEnabled);
 
     // Get current dynamic rules first
     const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -107,6 +146,12 @@ async function updateRedirectRules(): Promise<void> {
       await chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingRuleIds,
       });
+    }
+
+    // Only add new rules if globally enabled
+    if (!globalEnabled) {
+      console.log("Extension is disabled globally, skipping rule addition");
+      return;
     }
 
     // Add new rules - filter out empty rules

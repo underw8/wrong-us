@@ -3,17 +3,21 @@ interface TextRule {
   to: string;
 }
 
-// Store for text replacement rules
+// Store for text replacement rules and global state
 let textRules: TextRule[] = [];
+let globalEnabled = true;
 
 // Initialize content script
 try {
   chrome.storage.sync
-    .get(["textRules"])
+    .get(["textRules", "enabled"])
     .then((result) => {
+      globalEnabled = result.enabled !== undefined ? result.enabled : true;
       if (result.textRules) {
         textRules = result.textRules;
-        applyTextReplacements();
+        if (globalEnabled) {
+          applyTextReplacements();
+        }
       }
     })
     .catch((error) => {
@@ -29,11 +33,14 @@ chrome.runtime.onMessage.addListener(
     if (message.action === "updateTextRules") {
       // Reload rules from storage
       chrome.storage.sync
-        .get(["textRules"])
+        .get(["textRules", "enabled"])
         .then((result) => {
+          globalEnabled = result.enabled !== undefined ? result.enabled : true;
           if (result.textRules) {
             textRules = result.textRules;
-            applyTextReplacements();
+            if (globalEnabled) {
+              applyTextReplacements();
+            }
           }
           sendResponse({ success: true });
         })
@@ -49,7 +56,7 @@ chrome.runtime.onMessage.addListener(
 // Apply text replacements
 function applyTextReplacements(): void {
   try {
-    if (!document.body) {
+    if (!document.body || !globalEnabled) {
       return;
     }
 
@@ -87,7 +94,7 @@ function applyTextReplacements(): void {
 try {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.type === "childList") {
+      if (mutation.type === "childList" && globalEnabled) {
         applyTextReplacements();
       }
     });

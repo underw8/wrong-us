@@ -11,6 +11,7 @@ export interface TextRule {
 export interface StorageData {
   urlRules: UrlRule[];
   textRules: TextRule[];
+  enabled: boolean;
 }
 
 // Legacy interfaces for backward compatibility during migration
