@@ -1,7 +1,7 @@
 {
   "name": "wrong-us",
   "displayName": "Wrong Us",
-  "version": "0.250616.0",
+  "version": "0.250625.0",
   "description": "The Internet Imposter - Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!",
   "type": "module",
   "scripts": {
