@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Wrong Us - The Internet Imposter",
-  "version": "0.250625.0",
+  "version": "0.250626.0",
   "description": "Sneakily redirect links and replace text like a digital ninja. Your browser, your rules, your chaos!",
   "permissions": [
     "declarativeNetRequest",
