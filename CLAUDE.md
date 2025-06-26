@@ -33,8 +33,11 @@ src/
 1. **URL Redirection**: Uses Chrome's `declarativeNetRequest` API to intercept and redirect URLs
 2. **Text Replacement**: Real-time text replacement on webpages using content scripts
 3. **Pattern Support**: Both wildcard patterns and regex patterns for URL matching
-4. **Data Migration**: Handles migration from legacy storage format
-5. **Material Design 3**: Modern UI with Google's design system
+4. **Global Toggle**: Master on/off switch to disable all functionality instantly
+5. **Individual Rule Toggles**: Enable/disable specific rules without deleting them
+6. **Export/Import**: Backup and restore configurations as JSON files
+7. **Data Migration**: Handles migration from legacy storage format
+8. **Material Design 3**: Modern UI with Google's design system
 
 ## Build & Development
 
@@ -82,13 +85,15 @@ interface StorageData {
 }
 
 interface UrlRule {
-  from: string;  // Source URL pattern (wildcard or regex)
-  to: string;    // Target URL
+  from: string;     // Source URL pattern (wildcard or regex)
+  to: string;       // Target URL
+  enabled?: boolean; // Whether this rule is active (defaults to true)
 }
 
 interface TextRule {
-  from: string;  // Text to find
-  to: string;    // Replacement text
+  from: string;     // Text to find
+  to: string;       // Replacement text
+  enabled?: boolean; // Whether this rule is active (defaults to true)
 }
 ```
 
@@ -119,6 +124,7 @@ interface TextRule {
 - Automatically detects regex vs wildcard patterns
 - Supports multiple resource types (images, frames, XHR)
 - Rules are dynamically updated when user changes settings
+- Respects both global enabled state and individual rule toggles
 
 ### Text Replacement Logic
 
@@ -126,6 +132,21 @@ interface TextRule {
 - Uses `MutationObserver` for dynamic content
 - Escapes special regex characters for literal matching
 - Applies rules to all text nodes in the page
+- Checks both global enabled state and individual rule toggles
+
+### Toggle System
+
+- **Global Toggle**: Master switch that enables/disables all functionality
+- **Individual Toggles**: Per-rule switches that allow selective enabling/disabling
+- Rules with `enabled: false` are skipped during processing
+- UI provides visual feedback for disabled rules
+
+### Export/Import System
+
+- **Export Format**: JSON with version, timestamp, and complete rule data
+- **Import Validation**: Checks file structure and rule format before importing
+- **Backup Safety**: Confirms with user before replacing existing rules
+- **File Naming**: Auto-generates descriptive filenames with dates
 
 ## Common Tasks
 
@@ -156,6 +177,9 @@ yarn release  # Lint + version bump + build + zip
 - The extension migrates old storage format automatically on install
 - URL rules support both simple wildcards (*) and complex regex patterns
 - Text replacement is case-sensitive and uses global replacement
+- Individual rule toggles use optional `enabled` property (defaults to true)
+- Global and individual toggles work together (both must be enabled for rule to apply)
+- Export files include version and timestamp metadata for tracking
 - All storage operations use Chrome's sync storage for cross-device sync
 - Extension follows Manifest V3 security requirements
 
@@ -170,10 +194,12 @@ yarn release  # Lint + version bump + build + zip
 
 ### Common Issues
 
-1. **Rules not applying**: Check browser console for errors
+1. **Rules not applying**: Check browser console for errors, verify global toggle and individual rule toggles are enabled
 2. **Build failures**: Ensure Node.js >= 20.0.0 and TypeScript installed
 3. **Extension not loading**: Verify `dist/` folder was selected, not source
 4. **Storage issues**: Check Chrome's storage quota and sync status
+5. **Import failing**: Ensure JSON file is valid Wrong Us export format
+6. **Individual toggles not working**: Check that both global and individual toggles are enabled
 
 ### Debug Commands
 

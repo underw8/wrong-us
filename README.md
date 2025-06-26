@@ -13,7 +13,10 @@
 📝 **Text Infiltration** - Replace text on any webpage in real-time without anyone knowing  
 🌐 **Global Operations** - Full UTF-8 support for international ninja missions  
 ⚡ **Instant Deployment** - Changes apply immediately without page refresh  
-🎯 **Pattern Mastery** - Supports both simple wildcards (\*) and complex regex patterns
+🎯 **Pattern Mastery** - Supports both simple wildcards (\*) and complex regex patterns  
+🎛️ **Master Control** - Global on/off switch to disable all functionality instantly  
+🔘 **Individual Toggles** - Enable/disable specific rules without deleting them  
+📁 **Backup & Restore** - Export and import rule configurations as JSON files
 
 ## Installation
 
@@ -48,6 +51,33 @@
 - Enter the target text and replacement
 - Text replacement works across all websites in real-time
 - Supports international characters and emojis: `<img src="src/assets/icons/icon16.png" alt="icon" width="16" height="16" style="vertical-align: middle;"> ➡️ 🥷 ✨`
+
+### 🎛️ Mission Control Features
+
+#### Global Master Switch
+- Toggle the power button at the top to instantly enable/disable ALL functionality
+- When disabled, no rules are applied but all configurations are preserved
+- Perfect for quickly testing or temporarily disabling the extension
+
+#### Individual Rule Toggles
+- Each rule has its own small toggle switch on the left
+- Disable specific rules without deleting them
+- Disabled rules are visually dimmed but remain saved
+- Great for testing rule combinations or troubleshooting
+
+### 📁 Backup & Intel Operations
+
+#### Export Mission Data
+- Click "Export Rules" to download all your configurations
+- Creates a JSON file named `wrong-us-rules-YYYY-MM-DD.json`
+- Includes all URL rules, text rules, toggle states, and global settings
+- Perfect for backing up or sharing configurations
+
+#### Import Mission Data
+- Click "Import Rules" to load configurations from a file
+- Supports JSON files exported from Wrong Us
+- Shows preview before importing and asks for confirmation
+- Safely validates file format to prevent corruption
 
 ## Stealth Technology
 

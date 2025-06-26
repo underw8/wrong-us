@@ -154,8 +154,8 @@ async function updateRedirectRules(): Promise<void> {
       return;
     }
 
-    // Add new rules - filter out empty rules
-    const validRules = redirectRules.filter((rule) => rule.from && rule.to);
+    // Add new rules - filter out empty rules and disabled rules
+    const validRules = redirectRules.filter((rule) => rule.from && rule.to && rule.enabled !== false);
     if (validRules.length > 0) {
       const rules = validRules.map((rule, index) => {
         const isRegex = isRegexPattern(rule.from);

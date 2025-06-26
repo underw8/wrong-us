@@ -1,7 +1,4 @@
-interface TextRule {
-  from: string;
-  to: string;
-}
+import { TextRule } from "../types/index";
 
 // Store for text replacement rules and global state
 let textRules: TextRule[] = [];
@@ -72,7 +69,7 @@ function applyTextReplacements(): void {
       let modified = false;
 
       textRules.forEach((rule) => {
-        if (text && rule.from && rule.to && text.includes(rule.from)) {
+        if (text && rule.from && rule.to && rule.enabled !== false && text.includes(rule.from)) {
           text = text.replace(
             new RegExp(rule.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
             rule.to

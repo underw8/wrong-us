@@ -375,6 +375,129 @@
         color: var(--md-sys-color-on-surface-variant);
         cursor: not-allowed;
       }
+
+      /* Individual rule toggle styles */
+      .rule-toggle {
+        position: relative;
+        display: inline-block;
+        width: 32px;
+        height: 18px;
+        flex-shrink: 0;
+        margin-right: 8px;
+      }
+
+      .rule-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .rule-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--md-sys-color-outline);
+        transition: 0.3s;
+        border-radius: 18px;
+      }
+
+      .rule-slider:before {
+        position: absolute;
+        content: "";
+        height: 14px;
+        width: 14px;
+        left: 2px;
+        bottom: 2px;
+        background-color: var(--md-sys-color-surface);
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      input:checked + .rule-slider {
+        background-color: var(--md-sys-color-primary);
+      }
+
+      input:checked + .rule-slider:before {
+        transform: translateX(14px);
+      }
+
+      .rule-slider:hover {
+        box-shadow: 0 0 0 6px rgba(0, 105, 92, 0.1);
+      }
+
+      /* Rule disabled state */
+      .rule.rule-disabled {
+        opacity: 0.6;
+      }
+
+      .rule.rule-disabled .input-field input {
+        background-color: var(--md-sys-color-surface-variant);
+        color: var(--md-sys-color-on-surface-variant);
+      }
+
+      /* Backup controls styles */
+      .backup-controls {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .backup-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex: 1;
+        justify-content: center;
+      }
+
+      .export-btn {
+        background-color: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+        border: 1px solid var(--md-sys-color-outline-variant);
+      }
+
+      .export-btn:hover {
+        background-color: var(--md-sys-color-secondary);
+        color: var(--md-sys-color-on-secondary);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(74, 99, 95, 0.3);
+      }
+
+      .import-btn {
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        border: 1px solid var(--md-sys-color-outline-variant);
+      }
+
+      .import-btn:hover {
+        background-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 105, 92, 0.3);
+      }
+
+      .backup-btn .material-icons {
+        font-size: 18px;
+      }
+
+      .backup-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
     </style>
   </head>
   <body>
@@ -436,6 +559,24 @@
         <span class="material-icons">add</span>
         Add Text Rule
       </button>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="material-icons">import_export</span>
+        <h2>Backup & Restore</h2>
+      </div>
+      <div class="help">Export your rules to backup or share with others, or import rules from a file</div>
+      <div class="backup-controls">
+        <button class="backup-btn export-btn" id="exportRules">
+          <span class="material-icons">download</span>
+          Export Rules
+        </button>
+        <button class="backup-btn import-btn" id="importRules">
+          <span class="material-icons">upload</span>
+          Import Rules
+        </button>
+      </div>
     </div>
 
     <script type="module" src="index.js"></script>

@@ -17,6 +17,8 @@ class PopupManager {
   private addUrlRuleBtn: HTMLElement;
   private addTextRuleBtn: HTMLElement;
   private globalToggle: HTMLInputElement;
+  private exportBtn: HTMLElement;
+  private importBtn: HTMLElement;
   private globalEnabled: boolean = true;
 
   constructor() {
@@ -25,6 +27,8 @@ class PopupManager {
     this.addUrlRuleBtn = document.getElementById("addUrlRule")!;
     this.addTextRuleBtn = document.getElementById("addTextRule")!;
     this.globalToggle = document.getElementById("globalToggle") as HTMLInputElement;
+    this.exportBtn = document.getElementById("exportRules")!;
+    this.importBtn = document.getElementById("importRules")!;
 
     this.init();
   }
@@ -141,6 +145,8 @@ class PopupManager {
     this.addUrlRuleBtn.addEventListener("click", () => this.addUrlRule());
     this.addTextRuleBtn.addEventListener("click", () => this.addTextRule());
     this.globalToggle.addEventListener("change", () => this.handleGlobalToggle());
+    this.exportBtn.addEventListener("click", () => this.exportRules());
+    this.importBtn.addEventListener("click", () => this.importRules());
   }
 
   private async loadRules(): Promise<void> {
@@ -212,9 +218,19 @@ class PopupManager {
         ? "Enter URL pattern (e.g., *example.com* or regex)"
         : "Text to find";
     const toPlaceholder = type === "url" ? "Redirect to URL" : "Replace with";
+    const isEnabled = rule.enabled !== false; // Default to enabled if not set
+    const ruleClass = isEnabled ? "" : " rule-disabled";
 
     return `
-      <div class="rule" data-index="${index}" data-type="${type}">
+      <div class="rule${ruleClass}" data-index="${index}" data-type="${type}">
+        <label class="rule-toggle">
+          <input 
+            type="checkbox" 
+            ${isEnabled ? "checked" : ""}
+            data-action="toggle"
+          >
+          <span class="rule-slider"></span>
+        </label>
         <div class="input-field">
           <input 
             type="text" 
@@ -250,8 +266,17 @@ class PopupManager {
 
     container.addEventListener("input", (e) => {
       const target = e.target as HTMLInputElement;
-      if (target.tagName === "INPUT") {
+      if (target.tagName === "INPUT" && target.dataset.field) {
         this.handleRuleChange(target, type);
+      }
+    });
+
+    container.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.tagName === "INPUT" && target.dataset.action === "toggle") {
+        const ruleElement = target.closest(".rule") as HTMLElement;
+        const index = parseInt(ruleElement.dataset.index!);
+        this.handleRuleToggle(index, type, target.checked);
       }
     });
 
@@ -293,6 +318,34 @@ class PopupManager {
     }
   }
 
+  private async handleRuleToggle(index: number, type: "url" | "text", enabled: boolean): Promise<void> {
+    try {
+      const storageKey = type === "url" ? "urlRules" : "textRules";
+      const result = await chrome.storage.sync.get([storageKey]);
+      const rules = result[storageKey] || [];
+
+      if (rules[index]) {
+        rules[index].enabled = enabled;
+        await chrome.storage.sync.set({ [storageKey]: rules });
+
+        // Update UI to reflect the change
+        const ruleElement = document.querySelector(`[data-index="${index}"][data-type="${type}"]`) as HTMLElement;
+        if (ruleElement) {
+          if (enabled) {
+            ruleElement.classList.remove('rule-disabled');
+          } else {
+            ruleElement.classList.add('rule-disabled');
+          }
+        }
+
+        // Notify background script of changes
+        await this.notifyBackgroundScript(type);
+      }
+    } catch (error) {
+      console.error("Failed to toggle rule:", error);
+    }
+  }
+
   private async deleteRule(index: number, type: "url" | "text"): Promise<void> {
     try {
       const storageKey = type === "url" ? "urlRules" : "textRules";
@@ -321,7 +374,7 @@ class PopupManager {
       const result = await chrome.storage.sync.get(["urlRules"]);
       const urlRules: UrlRule[] = result.urlRules || [];
 
-      urlRules.push({ from: "", to: "" });
+      urlRules.push({ from: "", to: "", enabled: true });
       await chrome.storage.sync.set({ urlRules });
 
       this.renderUrlRules(urlRules);
@@ -336,13 +389,156 @@ class PopupManager {
       const result = await chrome.storage.sync.get(["textRules"]);
       const textRules: TextRule[] = result.textRules || [];
 
-      textRules.push({ from: "", to: "" });
+      textRules.push({ from: "", to: "", enabled: true });
       await chrome.storage.sync.set({ textRules });
 
       this.renderTextRules(textRules);
       await this.notifyBackgroundScript("text");
     } catch (error) {
       console.error("Failed to add text rule:", error);
+    }
+  }
+
+  private async exportRules(): Promise<void> {
+    try {
+      const result = await chrome.storage.sync.get(["urlRules", "textRules", "enabled"]);
+      const exportData = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        data: {
+          urlRules: result.urlRules || [],
+          textRules: result.textRules || [],
+          enabled: result.enabled !== undefined ? result.enabled : true
+        }
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `wrong-us-rules-${new Date().toISOString().split('T')[0]}.json`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      console.log('Rules exported successfully');
+    } catch (error) {
+      console.error('Failed to export rules:', error);
+      alert('Failed to export rules. Please try again.');
+    }
+  }
+
+  private async importRules(): Promise<void> {
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      
+      input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+
+        try {
+          const text = await file.text();
+          const importData = JSON.parse(text);
+          
+          // Validate import data structure
+          if (!this.validateImportData(importData)) {
+            alert('Invalid file format. Please select a valid Wrong Us rules export file.');
+            return;
+          }
+
+          // Confirm import
+          const confirm = window.confirm(
+            `Import ${importData.data.urlRules?.length || 0} URL rules and ${importData.data.textRules?.length || 0} text rules?\n\nThis will replace your current rules.`
+          );
+          
+          if (!confirm) return;
+
+          // Import the data
+          const { urlRules, textRules, enabled } = importData.data;
+          
+          // Ensure all rules have the enabled property
+          const processedUrlRules = urlRules?.map((rule: any) => ({
+            from: rule.from || "",
+            to: rule.to || "",
+            enabled: rule.enabled !== undefined ? rule.enabled : true
+          })) || [];
+          
+          const processedTextRules = textRules?.map((rule: any) => ({
+            from: rule.from || "",
+            to: rule.to || "",
+            enabled: rule.enabled !== undefined ? rule.enabled : true
+          })) || [];
+
+          await chrome.storage.sync.set({
+            urlRules: processedUrlRules,
+            textRules: processedTextRules,
+            enabled: enabled !== undefined ? enabled : true
+          });
+
+          // Update global state and UI
+          this.globalEnabled = enabled !== undefined ? enabled : true;
+          this.globalToggle.checked = this.globalEnabled;
+          this.updateUIState();
+
+          // Re-render rules
+          this.renderUrlRules(processedUrlRules);
+          this.renderTextRules(processedTextRules);
+
+          // Notify background and content scripts
+          await this.notifyBackgroundScript("url");
+          await this.notifyBackgroundScript("text");
+          await chrome.runtime.sendMessage({ action: "toggleGlobal" });
+
+          console.log('Rules imported successfully');
+          alert('Rules imported successfully!');
+        } catch (error) {
+          console.error('Failed to import rules:', error);
+          alert('Failed to import rules. Please check the file format and try again.');
+        }
+      };
+
+      input.click();
+    } catch (error) {
+      console.error('Failed to initiate import:', error);
+      alert('Failed to open file picker. Please try again.');
+    }
+  }
+
+  private validateImportData(data: any): boolean {
+    try {
+      // Check basic structure
+      if (!data || typeof data !== 'object') return false;
+      if (!data.data || typeof data.data !== 'object') return false;
+      
+      const { urlRules, textRules } = data.data;
+      
+      // Validate URL rules
+      if (urlRules && (!Array.isArray(urlRules) || !urlRules.every((rule: any) => 
+        rule && typeof rule === 'object' && 
+        typeof rule.from === 'string' && 
+        typeof rule.to === 'string'
+      ))) {
+        return false;
+      }
+      
+      // Validate text rules
+      if (textRules && (!Array.isArray(textRules) || !textRules.every((rule: any) => 
+        rule && typeof rule === 'object' && 
+        typeof rule.from === 'string' && 
+        typeof rule.to === 'string'
+      ))) {
+        return false;
+      }
+
+      return true;
+    } catch {
+      return false;
     }
   }
 

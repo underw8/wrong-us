@@ -1,11 +1,13 @@
 export interface UrlRule {
   from: string;
   to: string;
+  enabled?: boolean;
 }
 
 export interface TextRule {
   from: string;
   to: string;
+  enabled?: boolean;
 }
 
 export interface StorageData {
